@@ -6,16 +6,16 @@ import (
 )
 
 type (
-	CMDBuilder struct {
-		Set  *CMDSetter
+	Builder struct {
+		Set  *Setter
 		root *cli.Command
 		cur  *cli.Command
 	}
 )
 
-func newBuilder(root, cur *cli.Command) *CMDBuilder {
-	builder := &CMDBuilder{
-		Set:  &CMDSetter{},
+func newBuilder(root, cur *cli.Command) *Builder {
+	builder := &Builder{
+		Set:  &Setter{},
 		root: root,
 		cur:  cur,
 	}
@@ -23,27 +23,27 @@ func newBuilder(root, cur *cli.Command) *CMDBuilder {
 	return builder
 }
 
-func New(cmd string) *CMDBuilder {
+func New(cmd string) *Builder {
 	cmdObj := &cli.Command{Name: cmd}
 	return newBuilder(cmdObj, cmdObj)
 }
 
-func (cb *CMDBuilder) Root() *cli.Command {
+func (cb *Builder) Root() *cli.Command {
 	return cb.root
 }
 
-func (cb *CMDBuilder) Cur() *CMDBuilder {
+func (cb *Builder) Cur() *Builder {
 	return newBuilder(cb.root, cb.cur)
 }
 
-func (cb *CMDBuilder) Flags(flags ...cli.Flag) *CMDBuilder {
+func (cb *Builder) Flags(flags ...cli.Flag) *Builder {
 	if len(flags) > 0 {
 		cb.cur.Flags = flags
 	}
 	return cb
 }
 
-func (cb *CMDBuilder) Child(cmd string) *CMDBuilder {
+func (cb *Builder) Child(cmd string) *Builder {
 	if cb.cur.Subcommands == nil {
 		cb.cur.Subcommands = make([]*cli.Command, 0)
 	}
@@ -61,7 +61,7 @@ func (cb *CMDBuilder) Child(cmd string) *CMDBuilder {
 	return newCmd
 }
 
-func (cb *CMDBuilder) SubCmd(child *cli.Command) *CMDBuilder {
+func (cb *Builder) SubCmd(child *cli.Command) *Builder {
 	if cb.cur.Subcommands == nil {
 		cb.cur.Subcommands = make([]*cli.Command, 0)
 	}
@@ -69,12 +69,12 @@ func (cb *CMDBuilder) SubCmd(child *cli.Command) *CMDBuilder {
 	return cb
 }
 
-func (cb *CMDBuilder) Action(action cli.ActionFunc) *CMDBuilder {
+func (cb *Builder) Action(action cli.ActionFunc) *Builder {
 	cb.cur.Action = action
 	return cb
 }
 
-func (cb *CMDBuilder) Handler(handler ICliHandler, mws ...Middleware) *CMDBuilder {
+func (cb *Builder) Handler(handler ICliHandler, mws ...Middleware) *Builder {
 	cb.cur.Flags = handler.Flags()
 	cb.cur.Action = chain(append(mws, func(next cli.ActionFunc) cli.ActionFunc {
 		return func(c *cli.Context) (err error) {

@@ -1,30 +1,22 @@
 package easycmd
 
 import (
+	"io"
+	"os"
+
 	"github.com/urfave/cli/v2"
 )
 
-type (
-	CMDSetter struct {
-		End *CMDBuilder
-	}
-)
-
-func (set *CMDSetter) Custom(setter func(*cli.Command)) *CMDSetter {
-	setter(set.End.cur)
-	return set
+type CustomOption struct {
+	ExitAfterPrintHelpMsg bool
 }
 
-func (set *CMDSetter) Usage(usage string) *CMDSetter {
-	set.End.cur.Usage = usage
-	return set
-}
-
-func (set *CMDSetter) Alias(a string) *CMDSetter {
-	if set.End.cur.Aliases == nil {
-		set.End.cur.Aliases = []string{a}
-	} else {
-		set.End.cur.Aliases = append(set.End.cur.Aliases, a)
+// SetCustomOptions can set some easycmd-layer options
+func SetCustomOptions(opt CustomOption) {
+	if opt.ExitAfterPrintHelpMsg {
+		cli.HelpPrinter = func(out io.Writer, tpl string, data interface{}) {
+			cli.HelpPrinterCustom(out, tpl, data, nil)
+			os.Exit(0)
+		}
 	}
-	return set
 }
