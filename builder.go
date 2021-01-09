@@ -1,6 +1,8 @@
 package easycmd
 
 import (
+	"os"
+
 	"github.com/thoas/go-funk"
 	"github.com/urfave/cli/v2"
 )
@@ -74,6 +76,7 @@ func (cb *Builder) Action(action cli.ActionFunc) *Builder {
 	return cb
 }
 
+// Handler method sets the cmd by a ICliHandler
 func (cb *Builder) Handler(handler ICliHandler, mws ...Middleware) *Builder {
 	cb.cur.Flags = handler.Flags()
 	cb.cur.Action = chain(append(mws, func(next cli.ActionFunc) cli.ActionFunc {
@@ -86,4 +89,13 @@ func (cb *Builder) Handler(handler ICliHandler, mws ...Middleware) *Builder {
 		}
 	})...)(handler.Handle)
 	return cb
+}
+
+// RunAsApp runs the command as a single app
+func (cb *Builder) RunAsApp() error {
+	app, err := ToApp(cb.Root())
+	if err != nil {
+		return err
+	}
+	return app.Run(os.Args)
 }
