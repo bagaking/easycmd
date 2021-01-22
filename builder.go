@@ -3,7 +3,6 @@ package easycmd
 import (
 	"os"
 
-	"github.com/thoas/go-funk"
 	"github.com/urfave/cli/v2"
 )
 
@@ -25,19 +24,23 @@ func newBuilder(root, cur *cli.Command) *Builder {
 	return builder
 }
 
+// create a New Builder by cmd name
 func New(cmd string) *Builder {
 	cmdObj := &cli.Command{Name: cmd}
 	return newBuilder(cmdObj, cmdObj)
 }
 
+// Root returns root Builder
 func (cb *Builder) Root() *cli.Command {
 	return cb.root
 }
 
+// Cur returns current Builder
 func (cb *Builder) Cur() *Builder {
 	return newBuilder(cb.root, cb.cur)
 }
 
+// Flags override all flags of current Builder
 func (cb *Builder) Flags(flags ...cli.Flag) *Builder {
 	if len(flags) > 0 {
 		cb.cur.Flags = flags
@@ -45,17 +48,22 @@ func (cb *Builder) Flags(flags ...cli.Flag) *Builder {
 	return cb
 }
 
+// Child creates a child of current Builder by a given cmd name
 func (cb *Builder) Child(cmd string) *Builder {
 	if cb.cur.Subcommands == nil {
 		cb.cur.Subcommands = make([]*cli.Command, 0)
 	}
 
-	_, v := funk.FindKey(cb.cur.Subcommands, func(sc *cli.Command) bool {
-		return sc.Name == cmd
-	})
+	var find *cli.Command = nil
+	for _, v := range cb.cur.Subcommands {
+		if v.Name == cmd {
+			find = v
+			break
+		}
+	}
 
-	if v != nil {
-		return newBuilder(cb.root, v.(*cli.Command))
+	if find != nil {
+		return newBuilder(cb.root, find)
 	}
 
 	newCmd := New(cmd)
@@ -63,6 +71,7 @@ func (cb *Builder) Child(cmd string) *Builder {
 	return newCmd
 }
 
+// SubCmd creates a child of current Builder by a given cli.Command
 func (cb *Builder) SubCmd(child *cli.Command) *Builder {
 	if cb.cur.Subcommands == nil {
 		cb.cur.Subcommands = make([]*cli.Command, 0)
@@ -71,6 +80,8 @@ func (cb *Builder) SubCmd(child *cli.Command) *Builder {
 	return cb
 }
 
+
+// Action sets the action of current Builder
 func (cb *Builder) Action(action cli.ActionFunc) *Builder {
 	cb.cur.Action = action
 	return cb
