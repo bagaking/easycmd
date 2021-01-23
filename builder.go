@@ -9,15 +9,15 @@ import (
 type (
 	Builder struct {
 		Set  *Setter
-		root *cli.Command
+		base *cli.Command
 		cur  *cli.Command
 	}
 )
 
-func newBuilder(root, cur *cli.Command) *Builder {
+func newBuilder(base, cur *cli.Command) *Builder {
 	builder := &Builder{
 		Set:  &Setter{},
-		root: root,
+		base: base,
 		cur:  cur,
 	}
 	builder.Set.End = builder
@@ -30,14 +30,14 @@ func New(cmd string) *Builder {
 	return newBuilder(cmdObj, cmdObj)
 }
 
-// Root returns root Builder
-func (cb *Builder) Root() *cli.Command {
-	return cb.root
+// Base returns base Builder
+func (cb *Builder) Base() *Builder {
+	return newBuilder(cb.base, cb.cur)
 }
 
 // Cur returns current Builder
 func (cb *Builder) Cur() *Builder {
-	return newBuilder(cb.root, cb.cur)
+	return newBuilder(cb.base, cb.cur)
 }
 
 // Flags override all flags of current Builder
@@ -63,11 +63,11 @@ func (cb *Builder) Child(cmd string) *Builder {
 	}
 
 	if find != nil {
-		return newBuilder(cb.root, find)
+		return newBuilder(cb.base, find)
 	}
 
 	newCmd := New(cmd)
-	cb.cur.Subcommands = append(cb.cur.Subcommands, newCmd.Root())
+	cb.cur.Subcommands = append(cb.cur.Subcommands, newCmd.BuildBase())
 	return newCmd
 }
 
@@ -79,7 +79,6 @@ func (cb *Builder) SubCmd(child *cli.Command) *Builder {
 	cb.cur.Subcommands = append(cb.cur.Subcommands, child)
 	return cb
 }
-
 
 // Action sets the action of current Builder
 func (cb *Builder) Action(action cli.ActionFunc) *Builder {
@@ -103,10 +102,20 @@ func (cb *Builder) Handler(handler ICliHandler, mws ...Middleware) *Builder {
 }
 
 // RunAsApp runs the command as a single app
-func (cb *Builder) RunAsApp() error {
-	app, err := ToApp(cb.Root())
+func (cb *Builder) RunBaseAsApp() error {
+	app, err := ToApp(cb.BuildBase())
 	if err != nil {
 		return err
 	}
 	return app.Run(os.Args)
+}
+
+// Build returns root Builder's cmd
+func (cb *Builder) BuildBase() *cli.Command {
+	return cb.base
+}
+
+// BuildCur returns current Builder's cmd
+func (cb *Builder) BuildCur() *cli.Command {
+	return cb.base
 }
