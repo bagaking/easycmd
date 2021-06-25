@@ -97,5 +97,7 @@ func ToApp(cmd *cli.Command) (*cli.App, error) {
 		cmd.Flags = nil
 	}
 
+	app.Commands = cmd.Subcommands
+
 	return app, nil
 }

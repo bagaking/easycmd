@@ -9,20 +9,20 @@ type (
 )
 
 func (set *Setter) Custom(setter func(*cli.Command)) *Setter {
-	setter(set.End.cur)
+	setter(set.End.curCli)
 	return set
 }
 
 func (set *Setter) Usage(usage string) *Setter {
-	set.End.cur.Usage = usage
+	set.End.curCli.Usage = usage
 	return set
 }
 
 func (set *Setter) Alias(a string) *Setter {
-	if set.End.cur.Aliases == nil {
-		set.End.cur.Aliases = []string{a}
+	if set.End.curCli.Aliases == nil {
+		set.End.curCli.Aliases = []string{a}
 	} else {
-		set.End.cur.Aliases = append(set.End.cur.Aliases, a)
+		set.End.curCli.Aliases = append(set.End.curCli.Aliases, a)
 	}
 	return set
 }
