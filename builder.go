@@ -1,6 +1,7 @@
 package easycmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -110,6 +111,15 @@ func (cb *Builder) RunBaseAsApp() error {
 		return err
 	}
 	return app.Run(os.Args)
+}
+
+// RunBaseAsAppWithCtx runs the command as a single app
+func (cb *Builder) RunBaseAsAppWithCtx(ctx context.Context) error {
+	app, err := ToApp(cb.BuildBase())
+	if err != nil {
+		return err
+	}
+	return app.RunContext(ctx, os.Args)
 }
 
 // BuildBase returns root Builder's cmd
