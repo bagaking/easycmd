@@ -33,7 +33,7 @@ func New(cmd string) *Builder {
 
 // Base returns base Builder
 func (cb *Builder) Base() *Builder {
-	return newBuilder(cb.baseCli, cb.curCli)
+	return newBuilder(cb.baseCli, cb.baseCli)
 }
 
 // Cur returns current Builder
