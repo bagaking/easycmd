@@ -254,6 +254,66 @@ func TestREADMEQuickStartAliasRunsSubcommand(t *testing.T) {
 	}
 }
 
+func TestNestedAliasHelpUsesCustomHelpPrinter(t *testing.T) {
+	restoreHelpPrinterAfter(t)
+
+	cmd := New("example").
+		Child("admin").
+		Set.Alias("adm").Usage("Manage resources").End.
+		Child("users").
+		Set.Alias("u").Usage("Manage users").End.
+		BuildBase()
+
+	app, err := ToApp(cmd)
+	if err != nil {
+		t.Fatalf("ToApp(nested alias command) got error %v, want nil", err)
+	}
+
+	type helpCall struct {
+		template string
+		name     string
+		aliases  []string
+	}
+
+	var calls []helpCall
+	cli.HelpPrinter = func(out io.Writer, tpl string, data interface{}) {
+		command, ok := data.(*cli.Command)
+		if !ok {
+			t.Errorf("HelpPrinter data type = %T, want *cli.Command", data)
+			return
+		}
+		calls = append(calls, helpCall{
+			template: tpl,
+			name:     command.Name,
+			aliases:  append([]string(nil), command.Aliases...),
+		})
+		_, _ = fmt.Fprintf(out, "custom help for %s\n", command.Name)
+	}
+
+	var output bytes.Buffer
+	app.Writer = &output
+	if err := app.Run([]string{"example", "adm", "u", "--help"}); err != nil {
+		t.Fatalf("App.Run(nested alias help) got error %v, want nil", err)
+	}
+
+	if got, want := output.String(), "custom help for users\n"; got != want {
+		t.Fatalf("App.Run(nested alias help) output got %q, want %q", got, want)
+	}
+	if len(calls) != 1 {
+		t.Fatalf("HelpPrinter call count = %d, want 1: %#v", len(calls), calls)
+	}
+	gotCall := calls[0]
+	if gotCall.template != cli.CommandHelpTemplate {
+		t.Fatalf("HelpPrinter template = %q, want command help template", gotCall.template)
+	}
+	if gotCall.name != "users" {
+		t.Fatalf("HelpPrinter command name = %q, want %q", gotCall.name, "users")
+	}
+	if !reflect.DeepEqual(gotCall.aliases, []string{"u"}) {
+		t.Fatalf("HelpPrinter command aliases = %#v, want %#v", gotCall.aliases, []string{"u"})
+	}
+}
+
 func restoreHelpPrinterAfter(t *testing.T) {
 	t.Helper()
 
