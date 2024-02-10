@@ -38,6 +38,21 @@ func (m *mockPrintableNode) ChildrenCount() int {
 	return len(m.children)
 }
 
+type incrementingCountNode struct {
+	*mockPrintableNode
+	calls int
+}
+
+func (n *incrementingCountNode) ChildrenCount() int {
+	count := len(n.children) + n.calls
+	n.calls++
+	return count
+}
+
+type contentNode interface {
+	Content() string
+}
+
 // createTestTree 创建一个用于测试的树结构
 func createTestTree() printree.IPrintableTreeNode {
 	return &mockPrintableNode{
@@ -70,7 +85,7 @@ func TestPrintTree(t *testing.T) {
 
 	var output strings.Builder
 	printer := printree.PrintableNodeSerializer(func(node printree.IPrintableTreeNode, ind int) string {
-		return node.(*mockPrintableNode).Content()
+		return node.(contentNode).Content()
 	})
 
 	printFn := func(a ...interface{}) (n int, err error) {
@@ -103,4 +118,39 @@ func TestPrintTree(t *testing.T) {
 	}, "\n")
 
 	assert.Equal(t, expectedOutput, result, "output should be equal")
+}
+
+func TestRecursivePrintUsesStableChildrenCountPerLevel(t *testing.T) {
+	root := &incrementingCountNode{
+		mockPrintableNode: &mockPrintableNode{
+			content: "Root",
+			children: []printree.IPrintableTreeNode{
+				&mockPrintableNode{content: "Left"},
+				&mockPrintableNode{content: "Right"},
+			},
+		},
+	}
+
+	var output strings.Builder
+	printer := printree.PrintableNodeSerializer(func(node printree.IPrintableTreeNode, ind int) string {
+		return node.(contentNode).Content()
+	})
+	printFn := func(a ...interface{}) (n int, err error) {
+		return output.WriteString(a[0].(string) + "\n")
+	}
+
+	err := printer.RecursivePrint(root, printree.OptCustomPrinter(printFn))
+	if err != nil {
+		t.Fatalf("RecursivePrint(%v) returned error: %v", root.Content(), err)
+	}
+
+	want := strings.Join([]string{
+		"Root",
+		"├─ Left",
+		"└─ Right",
+		"",
+	}, "\n")
+	if got := output.String(); got != want {
+		t.Errorf("RecursivePrint(%v) output = %q, want %q", root.Content(), got, want)
+	}
 }

@@ -44,7 +44,8 @@ func (nodeSerializer PrintableNodeSerializer) RecursivePrint(st IPrintableTreeNo
 		return nil
 	}
 
+	childrenCount := st.ChildrenCount()
 	return st.ForEachPrintableChild(func(child IPrintableTreeNode, ind int) error {
-		return recursivePrint(child, "", ind, st.ChildrenCount(), nodeSerializer, setting)
+		return recursivePrint(child, "", ind, childrenCount, nodeSerializer, setting)
 	})
 }

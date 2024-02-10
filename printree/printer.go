@@ -44,11 +44,12 @@ func recursivePrint(
 		return nil
 	}
 
+	directChildrenCount := st.ChildrenCount()
 	if err = st.ForEachPrintableChild(func(
 		child IPrintableTreeNode,
 		ind int,
 	) error {
-		return recursivePrint(child, nextLevelPrefix, ind, st.ChildrenCount(), nodeSerializer, setting)
+		return recursivePrint(child, nextLevelPrefix, ind, directChildrenCount, nodeSerializer, setting)
 	}); err != nil {
 		return err
 	}
