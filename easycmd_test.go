@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"reflect"
 	"testing"
 
 	"github.com/urfave/cli/v2"
@@ -159,6 +161,40 @@ func TestToAppRootActionReadsParsedAppFlagValue(t *testing.T) {
 
 	if gotConfig != "parsed-config" {
 		t.Fatalf("ToApp(root command with config flag) root action config = %q, want %q", gotConfig, "parsed-config")
+	}
+}
+
+func TestToAppPreservesCustomHelpPrinter(t *testing.T) {
+	restoreHelpPrinterAfter(t)
+
+	tests := []struct {
+		name        string
+		helpPrinter func(io.Writer, string, interface{})
+	}{
+		{
+			name:        "custom help printer",
+			helpPrinter: func(out io.Writer, tpl string, data interface{}) {},
+		},
+		{
+			name:        "alternate custom help printer",
+			helpPrinter: func(out io.Writer, tpl string, data interface{}) {},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cli.HelpPrinter = tt.helpPrinter
+			want := reflect.ValueOf(tt.helpPrinter).Pointer()
+
+			if _, err := ToApp(New("root").BuildBase()); err != nil {
+				t.Fatalf("ToApp(root command) returned error: %v", err)
+			}
+
+			got := reflect.ValueOf(cli.HelpPrinter).Pointer()
+			if got != want {
+				t.Fatalf("ToApp(root command) HelpPrinter pointer = %v, want %v", got, want)
+			}
+		})
 	}
 }
 

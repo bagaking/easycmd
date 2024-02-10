@@ -62,8 +62,6 @@ func MergeFlags(flags1, flags2 []cli.Flag, ignoreError ...bool) ([]cli.Flag, err
 // when flags conflict, error will be thrown and the procedure will be stock
 // to ignore the error, you can stash the flags of the command, and the call MergeFlags by yourself
 func ToApp(cmd *cli.Command) (*cli.App, error) {
-	SetCustomOptions(CustomOption{ExitAfterPrintHelpMsg: true})
-
 	rootCmd := *cmd
 	rootCmd.Flags = nil
 
