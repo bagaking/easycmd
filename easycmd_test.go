@@ -112,6 +112,8 @@ func TestBuilderFlagsWithNoArgsClearsCurrentFlags(t *testing.T) {
 }
 
 func TestToAppDoesNotClearCommandFlags(t *testing.T) {
+	restoreHelpPrinterAfter(t)
+
 	cmd := New("root").Flags(&cli.StringFlag{Name: "config"}).BuildBase()
 
 	app, err := ToApp(cmd)
@@ -135,6 +137,8 @@ func TestToAppDoesNotClearCommandFlags(t *testing.T) {
 }
 
 func TestToAppRootActionReadsParsedAppFlagValue(t *testing.T) {
+	restoreHelpPrinterAfter(t)
+
 	var gotConfig string
 	cmd := New("root").Flags(&cli.StringFlag{
 		Name:  "config",
@@ -159,8 +163,8 @@ func TestToAppRootActionReadsParsedAppFlagValue(t *testing.T) {
 }
 
 func TestREADMEQuickStartAliasRunsSubcommand(t *testing.T) {
-	args := []string{"example", "hi", "Alice"}
-	var output bytes.Buffer
+	restoreHelpPrinterAfter(t)
+
 	cmd := New("example").
 		Set.Usage("Small easycmd example").End.
 		Child("hello").
@@ -179,15 +183,46 @@ func TestREADMEQuickStartAliasRunsSubcommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ToApp(README quickstart command) got error %v, want nil", err)
 	}
-	app.Writer = &output
 
-	if err := app.Run(args); err != nil {
-		t.Fatalf("App.Run(%q) got error %v, want nil", args, err)
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{
+			name: "primary command",
+			args: []string{"example", "hello", "Alice"},
+			want: "hello, Alice\n",
+		},
+		{
+			name: "alias",
+			args: []string{"example", "hi", "Alice"},
+			want: "hello, Alice\n",
+		},
 	}
 
-	got := output.String()
-	want := "hello, Alice\n"
-	if got != want {
-		t.Fatalf("App.Run(%q) output got %q, want %q", args, got, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var output bytes.Buffer
+			app.Writer = &output
+
+			if err := app.Run(tt.args); err != nil {
+				t.Fatalf("App.Run(%q) got error %v, want nil", tt.args, err)
+			}
+
+			got := output.String()
+			if got != tt.want {
+				t.Fatalf("App.Run(%q) output got %q, want %q", tt.args, got, tt.want)
+			}
+		})
 	}
+}
+
+func restoreHelpPrinterAfter(t *testing.T) {
+	t.Helper()
+
+	helpPrinter := cli.HelpPrinter
+	t.Cleanup(func() {
+		cli.HelpPrinter = helpPrinter
+	})
 }
