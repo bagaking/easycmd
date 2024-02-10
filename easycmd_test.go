@@ -40,6 +40,34 @@ func TestMergeFlagsRejectsDuplicateNames(t *testing.T) {
 	}
 }
 
+func TestMergeFlagsRejectsNameAliasConflicts(t *testing.T) {
+	tests := []struct {
+		name   string
+		flags1 []cli.Flag
+		flags2 []cli.Flag
+	}{
+		{
+			name:   "existing name conflicts with new alias",
+			flags1: []cli.Flag{&cli.StringFlag{Name: "config"}},
+			flags2: []cli.Flag{&cli.BoolFlag{Name: "color", Aliases: []string{"config"}}},
+		},
+		{
+			name:   "existing alias conflicts with new name",
+			flags1: []cli.Flag{&cli.StringFlag{Name: "config", Aliases: []string{"c"}}},
+			flags2: []cli.Flag{&cli.BoolFlag{Name: "c"}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := MergeFlags(tt.flags1, tt.flags2)
+			if !errors.Is(err, ErrFlagAlreadyExist) {
+				t.Fatalf("expected ErrFlagAlreadyExist, got %v", err)
+			}
+		})
+	}
+}
+
 func TestMergeFlagsCanIgnoreDuplicateNames(t *testing.T) {
 	flags, err := MergeFlags(
 		[]cli.Flag{&cli.StringFlag{Name: "config"}},
