@@ -1,0 +1,11 @@
+entry = [
+    "README.md", 
+    "./**/*.go",
+]
+
+exclude = [
+    "go.*",
+    "*.bundle.txt"
+]
+
+output = "merged_code.bundle.txt"
