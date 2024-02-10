@@ -1,7 +1,9 @@
 package easycmd
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/urfave/cli/v2"
@@ -153,5 +155,39 @@ func TestToAppRootActionReadsParsedAppFlagValue(t *testing.T) {
 
 	if gotConfig != "parsed-config" {
 		t.Fatalf("ToApp(root command with config flag) root action config = %q, want %q", gotConfig, "parsed-config")
+	}
+}
+
+func TestREADMEQuickStartAliasRunsSubcommand(t *testing.T) {
+	args := []string{"example", "hi", "Alice"}
+	var output bytes.Buffer
+	cmd := New("example").
+		Set.Usage("Small easycmd example").End.
+		Child("hello").
+		Set.Alias("hi").Usage("Print a greeting").End.
+		Action(func(c *cli.Context) error {
+			name := c.Args().First()
+			if name == "" {
+				name = "world"
+			}
+			_, err := fmt.Fprintf(c.App.Writer, "hello, %s\n", name)
+			return err
+		}).
+		BuildBase()
+
+	app, err := ToApp(cmd)
+	if err != nil {
+		t.Fatalf("ToApp(README quickstart command) got error %v, want nil", err)
+	}
+	app.Writer = &output
+
+	if err := app.Run(args); err != nil {
+		t.Fatalf("App.Run(%q) got error %v, want nil", args, err)
+	}
+
+	got := output.String()
+	want := "hello, Alice\n"
+	if got != want {
+		t.Fatalf("App.Run(%q) output got %q, want %q", args, got, want)
 	}
 }
