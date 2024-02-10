@@ -65,8 +65,11 @@ Run it with `go run . hello Alice` or the alias `go run . hi Alice`.
 ## Local validation
 
 ```bash
-go test ./...
+make check
 ```
+
+`make check` runs the repository Go test suite and is the same validation gate
+used by CI.
 
 ## Documentation
 
