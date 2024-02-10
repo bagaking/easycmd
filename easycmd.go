@@ -29,7 +29,7 @@ func MergeFlags(flags1, flags2 []cli.Flag, ignoreError ...bool) ([]cli.Flag, err
 	all := append(flags1, flags2...)
 	ier := ignoreError != nil && len(ignoreError) > 0 && ignoreError[0]
 
-	result := make([]cli.Flag, len(all))
+	result := make([]cli.Flag, 0, len(all))
 
 	exist := map[string]bool{}
 	for _, v := range all {
