@@ -131,3 +131,27 @@ func TestToAppDoesNotClearCommandFlags(t *testing.T) {
 		t.Fatalf("second ToApp(root command with config flag) app flags length = %d, want 1", len(flags))
 	}
 }
+
+func TestToAppRootActionReadsParsedAppFlagValue(t *testing.T) {
+	var gotConfig string
+	cmd := New("root").Flags(&cli.StringFlag{
+		Name:  "config",
+		Value: "default-config",
+	}).Action(func(c *cli.Context) error {
+		gotConfig = c.String("config")
+		return nil
+	}).BuildBase()
+
+	app, err := ToApp(cmd)
+	if err != nil {
+		t.Fatalf("ToApp(root command with config flag) returned error: %v", err)
+	}
+
+	if err := app.Run([]string{"test", "--config", "parsed-config"}); err != nil {
+		t.Fatalf("ToApp(root command with config flag).Run(--config parsed-config) returned error: %v", err)
+	}
+
+	if gotConfig != "parsed-config" {
+		t.Fatalf("ToApp(root command with config flag) root action config = %q, want %q", gotConfig, "parsed-config")
+	}
+}

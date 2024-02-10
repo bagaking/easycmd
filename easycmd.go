@@ -64,13 +64,16 @@ func MergeFlags(flags1, flags2 []cli.Flag, ignoreError ...bool) ([]cli.Flag, err
 func ToApp(cmd *cli.Command) (*cli.App, error) {
 	SetCustomOptions(CustomOption{ExitAfterPrintHelpMsg: true})
 
+	rootCmd := *cmd
+	rootCmd.Flags = nil
+
 	app := &cli.App{
 		Name:        filepath.Base(os.Args[0]),
 		HelpName:    filepath.Base(os.Args[0]),
 		Description: cmd.Usage,
 
 		BashComplete: cli.DefaultAppComplete,
-		Action:       cmd.Run,
+		Action:       rootCmd.Run,
 		Reader:       os.Stdin,
 		Writer:       os.Stdout,
 		ErrWriter:    os.Stderr,
