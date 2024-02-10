@@ -108,3 +108,26 @@ func TestBuilderFlagsWithNoArgsClearsCurrentFlags(t *testing.T) {
 		t.Fatalf("expected flags to be cleared, got %#v", flags)
 	}
 }
+
+func TestToAppDoesNotClearCommandFlags(t *testing.T) {
+	cmd := New("root").Flags(&cli.StringFlag{Name: "config"}).BuildBase()
+
+	app, err := ToApp(cmd)
+	if err != nil {
+		t.Fatalf("ToApp(root command with config flag) returned error: %v", err)
+	}
+	if flags := app.Flags; len(flags) != 1 {
+		t.Fatalf("ToApp(root command with config flag) app flags length = %d, want 1", len(flags))
+	}
+	if flags := cmd.Flags; len(flags) != 1 {
+		t.Fatalf("ToApp(root command with config flag) command flags length = %d, want 1", len(flags))
+	}
+
+	app, err = ToApp(cmd)
+	if err != nil {
+		t.Fatalf("second ToApp(root command with config flag) returned error: %v", err)
+	}
+	if flags := app.Flags; len(flags) != 1 {
+		t.Fatalf("second ToApp(root command with config flag) app flags length = %d, want 1", len(flags))
+	}
+}
