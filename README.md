@@ -20,51 +20,53 @@ easycmd enables you to focus on core functionality.
 
 To install easycmd, simply run:
 
-``bash
+```bash
 go get github.com/bagaking/easycmd
-``
+```
 
 ## Quick Start
 
-Below is a concise example displaying how you can set up a CLI application that manages inventory with commands to sell different items:
+Below is a small, complete example that defines a `hello` subcommand:
 
 ```go
 package main
 
 import (
-    "github.com/bagaking/easycmd"
-    "github.com/urfave/cli/v2"
+	"fmt"
+	"os"
+
+	"github.com/bagaking/easycmd"
+	"github.com/urfave/cli/v2"
 )
 
-// Define actions for different commands
-func SellGem(c *cli.Context) error {
-// Your code to sell a gem.
-return nil
-}
-
-func SellWood(c *cli.Context) error {
-// Your code to sell wood.
-return nil
-}
-
 func main() {
-    app := easycmd.New("inventory").
-        Child("sell").Set.
-        Alias("s").Usage("Commands to sell items").End.
-        Base().Child("gem").Set.
-        Alias("g").Usage("Sell some gems").End.Action(SellGem).
-        Base().Child("wood").Set.
-        Alias("w").Usage("Sell some wood").End.Action(SellWood).Flags(flagsWood).
-		Base().Child("idle").Handler(mainIdleHandler).
-		RunBaseAsApp(); 
-
-    if err := app.RunBaseAsApp(); err != nil {
-        panic(err)
-    }
+	err := easycmd.New("example").
+		Set.Usage("Small easycmd example").End.
+		Child("hello").
+		Set.Alias("hi").Usage("Print a greeting").End.
+		Action(func(c *cli.Context) error {
+			name := c.Args().First()
+			if name == "" {
+				name = "world"
+			}
+			fmt.Printf("hello, %s\n", name)
+			return nil
+		}).
+		RunBaseAsApp()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 ```
 
-In this example, we created a CLI with an `inventory` command followed by `sell` command having subcommands `gem` and `wood` each with their specific actions and usages.
+Run it with `go run . hello Alice` or the alias `go run . hi Alice`.
+
+## Local validation
+
+```bash
+go test ./...
+```
 
 ## Documentation
 
