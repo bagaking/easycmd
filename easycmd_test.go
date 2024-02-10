@@ -53,3 +53,20 @@ func TestMergeFlagsCanIgnoreDuplicateNames(t *testing.T) {
 		t.Fatalf("expected duplicate flag to be skipped, got %d flags", len(flags))
 	}
 }
+
+func TestMergeFlagsCanIgnoreDuplicateAliases(t *testing.T) {
+	flags, err := MergeFlags(
+		[]cli.Flag{&cli.StringFlag{Name: "config", Aliases: []string{"c"}}},
+		[]cli.Flag{&cli.BoolFlag{Name: "color", Aliases: []string{"c"}}},
+		true,
+	)
+	if err != nil {
+		t.Fatalf("MergeFlags returned error: %v", err)
+	}
+	if len(flags) != 1 {
+		t.Fatalf("expected alias-conflicting flag to be skipped, got %d flags", len(flags))
+	}
+	if flags[0].Names()[0] != "config" {
+		t.Fatalf("expected original flag to be preserved, got names %#v", flags[0].Names())
+	}
+}
