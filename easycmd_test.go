@@ -113,6 +113,26 @@ func TestBuilderFlagsWithNoArgsClearsCurrentFlags(t *testing.T) {
 	}
 }
 
+func TestBuilderChildReusesExistingAlias(t *testing.T) {
+	builder := New("root")
+
+	byName := builder.Child("hello").Set.Alias("hi").Usage("Print a greeting").End
+	byAlias := builder.Child("hi")
+	byAlias.Set.Usage("Print a warm greeting")
+
+	if byAlias.BuildCur() != byName.BuildCur() {
+		t.Fatalf("Child(%q) returned command %p, want existing alias command %p", "hi", byAlias.BuildCur(), byName.BuildCur())
+	}
+
+	subcommands := builder.BuildBase().Subcommands
+	if len(subcommands) != 1 {
+		t.Fatalf("Child(%q) created %d subcommands, want 1: %#v", "hi", len(subcommands), subcommands)
+	}
+	if usage := subcommands[0].Usage; usage != "Print a warm greeting" {
+		t.Fatalf("Child(%q) reused command usage = %q, want %q", "hi", usage, "Print a warm greeting")
+	}
+}
+
 func TestToAppDoesNotClearCommandFlags(t *testing.T) {
 	restoreHelpPrinterAfter(t)
 

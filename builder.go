@@ -55,7 +55,7 @@ func (cb *Builder) Child(cmd string) *Builder {
 
 	var find *cli.Command = nil
 	for _, v := range cb.curCli.Subcommands {
-		if v.Name == cmd {
+		if v.HasName(cmd) {
 			find = v
 			break
 		}
