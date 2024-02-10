@@ -98,3 +98,13 @@ func TestMergeFlagsCanIgnoreDuplicateAliases(t *testing.T) {
 		t.Fatalf("expected original flag to be preserved, got names %#v", flags[0].Names())
 	}
 }
+
+func TestBuilderFlagsWithNoArgsClearsCurrentFlags(t *testing.T) {
+	builder := New("root").Flags(&cli.StringFlag{Name: "config"})
+
+	builder.Flags()
+
+	if flags := builder.BuildCur().Flags; len(flags) != 0 {
+		t.Fatalf("expected flags to be cleared, got %#v", flags)
+	}
+}

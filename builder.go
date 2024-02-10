@@ -43,9 +43,7 @@ func (cb *Builder) Cur() *Builder {
 
 // Flags override all flags of current Builder
 func (cb *Builder) Flags(flags ...cli.Flag) *Builder {
-	if len(flags) > 0 {
-		cb.curCli.Flags = flags
-	}
+	cb.curCli.Flags = flags
 	return cb
 }
 
