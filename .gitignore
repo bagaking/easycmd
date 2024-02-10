@@ -2,3 +2,5 @@
 .vscode
 vendor
 __play
+
+*.bundle.txt
